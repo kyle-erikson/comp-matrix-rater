@@ -1,3 +1,30 @@
 type Query {
-    helloWorld: String!
+  getMatrices: [Matrix]
+  getLevels(matrixId: Int): [Level]
+  getReports(managerId: Int): [User]
+  getMatrixReportsForUser(userId: Int): [MatrixReport]
+}
+
+type Matrix {
+  id: Int
+  name: String
+}
+
+type Level {
+  id: Int
+  name: String
+  scope: String
+}
+
+type User {
+  id: Int
+  name: String
+  email: String
+  manager_id: Int
+}
+
+type MatrixReport {
+  id: Int
+  matrix_id: Int
+  user_id: Int
 }
