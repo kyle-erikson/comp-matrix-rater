@@ -1,5 +1,6 @@
 import { IResolvers } from "graphql-tools";
 import { PrismaClient } from "@prisma/client";
+import { BaseReport } from "./generated/graphql";
 
 const resolvers: IResolvers = {
   Query: {
@@ -17,7 +18,7 @@ const resolvers: IResolvers = {
         },
       });
     },
-    getReports: async (parent, { managerId }) => {
+    getUsers: async (parent, { managerId }) => {
       const prisma = new PrismaClient();
 
       return await prisma.user.findMany({
@@ -26,7 +27,7 @@ const resolvers: IResolvers = {
         },
       });
     },
-    getMatrixReportsForUser: async (parent, { userId }) => {
+    getReportsForUser: async (parent, { userId }) => {
       const prisma = new PrismaClient();
 
       return await prisma.matrix_report.findMany({
@@ -34,6 +35,43 @@ const resolvers: IResolvers = {
           user_id: userId,
         },
       });
+    },
+    getBaseReportForUser: async (parent, { userId, matrixId }) => {
+      const prisma = new PrismaClient();
+
+      const results = await prisma.user.findUnique({
+        where: {
+          id: Number(userId),
+        },
+        select: {
+          level_id: true,
+        },
+      });
+
+      if (!results?.level_id) throw "Cannot find level for user";
+
+      const report = await prisma.key_area.findMany({
+        where: {
+          matrix_id: Number(matrixId),
+        },
+        include: {
+          attribute: {
+            include: {
+              competency: {
+                include: {
+                  competency_description: {
+                    where: {
+                      level_id: results?.level_id,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      return report;
     },
   },
 };

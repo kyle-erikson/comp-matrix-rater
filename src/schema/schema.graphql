@@ -1,8 +1,9 @@
 type Query {
   getMatrices: [Matrix]
   getLevels(matrixId: Int): [Level]
-  getReports(managerId: Int): [User]
-  getMatrixReportsForUser(userId: Int): [MatrixReport]
+  getUsers(managerId: Int): [User]
+  getReportsForUser(userId: Int): [Report]
+  getBaseReportForUser(userId: String, matrixId: String): [KeyAreas]
 }
 
 type Matrix {
@@ -23,8 +24,28 @@ type User {
   manager_id: Int
 }
 
-type MatrixReport {
+type Report {
   id: Int
   matrix_id: Int
   user_id: Int
+}
+
+type KeyAreas {
+  name: String
+  attribute: [Attributes]
+}
+
+type Attributes {
+  name: String
+  competency: [Competency]
+}
+
+type Competency {
+  name: String
+  competency_description: [CompetencyDescription]
+}
+
+type CompetencyDescription {
+  core: Boolean
+  description: String
 }
