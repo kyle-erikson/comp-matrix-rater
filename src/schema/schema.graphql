@@ -6,6 +6,24 @@ type Query {
   getBaseReportForUser(userId: String, matrixId: String): [KeyAreas]
 }
 
+type Mutation {
+  saveReport(input: ReportInput): Rating
+}
+
+input ReportInput {
+  rating_id: Int
+  matrix_report_id: Int
+  matrix_id: Int
+  competency_id: Int
+  user_id: Int
+  rating: Int
+  notes: String
+}
+
+type Message {
+  msg: String
+}
+
 type Matrix {
   id: Int
   name: String
@@ -48,4 +66,18 @@ type Competency {
 type CompetencyDescription {
   core: Boolean
   description: String
+}
+
+type NewReport {
+  id: Int
+  report: [KeyAreas]
+}
+
+type Rating {
+  id: Int
+  competency_id: Int
+  user_id: Int
+  rating: Int
+  notes: String
+  matrix_report_id: Int
 }
