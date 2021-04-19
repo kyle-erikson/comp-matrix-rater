@@ -1,7 +1,8 @@
 import { IResolvers } from "graphql-tools";
 import { PrismaClient } from "@prisma/client";
-import { BaseReport, Report } from "./generated/graphql";
-import { ReportInput } from "./types/customTypes";
+import { BaseReport } from "./generated/graphql";
+import { Report } from "./types/customTypes";
+import { error } from "node:console";
 
 const resolvers: IResolvers = {
   Query: {
@@ -37,35 +38,52 @@ const resolvers: IResolvers = {
         },
       });
     },
-    getBaseReportForUser: async (parent, { userId, matrixId }) => {
+    getReport: async (parent, { reportId }) => {
       const prisma = new PrismaClient();
 
-      let userID = Number(userId);
-      let matrixID = Number(matrixId);
-
-      const results = await prisma.user.findUnique({
+      const matrixReport = await prisma.matrix_report.findUnique({
         where: {
-          id: userID,
+          id: reportId,
+        },
+        select: {
+          matrix_id: true,
+          user_id: true,
+        },
+      });
+
+      if (!matrixReport)
+        throw new Error("Could not find corresponding matrix report");
+
+      const jobLevel = await prisma.user.findUnique({
+        where: {
+          id: matrixReport.user_id,
         },
         select: {
           level_id: true,
         },
       });
 
-      if (!results?.level_id) throw "Cannot find level for user";
+      if (!jobLevel) throw new Error("No job level defined for user");
 
       const report = await prisma.key_area.findMany({
         where: {
-          matrix_id: matrixID,
+          matrix_id: matrixReport.matrix_id,
         },
         include: {
           attribute: {
             include: {
               competency: {
-                include: {
+                select: {
+                  name: true,
+                  id: true,
                   competency_description: {
                     where: {
-                      level_id: results?.level_id,
+                      level_id: jobLevel.level_id,
+                    },
+                  },
+                  rating: {
+                    where: {
+                      matrix_report_id: reportId,
                     },
                   },
                 },
@@ -83,7 +101,6 @@ const resolvers: IResolvers = {
       const {
         rating_id,
         matrix_report_id,
-        matrix_id,
         competency_id,
         user_id,
         rating,
@@ -92,10 +109,23 @@ const resolvers: IResolvers = {
 
       const prisma = new PrismaClient();
 
-      let matrixReportId = matrix_report_id ? Number(matrix_report_id) : 0;
       let ratingId = rating_id ? Number(rating_id) : 0;
+      let userId = user_id ? { user_id: Number(user_id) } : null;
 
       let ratingRecord = {};
+
+      if (!userId) {
+        userId = await prisma.matrix_report.findUnique({
+          where: {
+            id: matrix_report_id,
+          },
+          select: {
+            user_id: true,
+          },
+        });
+      }
+
+      if (!userId) throw new Error("Could not find user for this atrix report");
 
       if (ratingId > 0) {
         ratingRecord = await prisma.rating.update({
@@ -108,28 +138,33 @@ const resolvers: IResolvers = {
           },
         });
       } else {
-        if (matrixReportId <= 0) {
-          const newReport = await prisma.matrix_report.create({
-            data: {
-              matrix_id: Number(matrix_id),
-              user_id: Number(user_id),
-            },
-          });
-
-          matrixReportId = newReport.id;
-        }
         ratingRecord = await prisma.rating.create({
           data: {
             competency_id: Number(competency_id),
-            user_id: Number(user_id),
+            user_id: userId.user_id,
             rating: Number(rating),
             notes: notes,
-            matrix_report_id: matrixReportId,
+            matrix_report_id: matrix_report_id,
           },
         });
       }
 
       return ratingRecord;
+    },
+    createReport: async (parent, { userId }) => {
+      const prisma = new PrismaClient();
+
+      const recordId = await prisma.matrix_report.create({
+        data: {
+          matrix_id: 1,
+          user_id: Number(userId),
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      return recordId.id;
     },
   },
 };

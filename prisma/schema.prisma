@@ -61,30 +61,31 @@ model matrix {
 }
 
 model rating {
-  id               Int           @id @default(autoincrement())
+  id               Int            @id @default(autoincrement())
   competency_id    Int
   user_id          Int
   rating           Int
   notes            String?
-  matrix_report_id Int
-  competency       competency    @relation(fields: [competency_id], references: [id])
-  matrix_report    matrix_report @relation(fields: [matrix_report_id], references: [id])
-  user             user          @relation(fields: [user_id], references: [id])
+  matrix_report_id String?        @db.Uuid
+  competency       competency     @relation(fields: [competency_id], references: [id])
+  matrix_report    matrix_report? @relation(fields: [matrix_report_id], references: [id])
+  user             user           @relation(fields: [user_id], references: [id])
 }
 
 model user {
   id            Int             @id @default(autoincrement())
-  name          String
+  first_name    String
   email         String?
   manager_id    Int?
-  level_id      Int?
-  level         level?          @relation(fields: [level_id], references: [id])
+  level_id      Int
+  last_name     String?
+  level         level           @relation(fields: [level_id], references: [id])
   matrix_report matrix_report[]
   rating        rating[]
 }
 
 model matrix_report {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   matrix_id Int
   user_id   Int
   matrix    matrix   @relation(fields: [matrix_id], references: [id])
