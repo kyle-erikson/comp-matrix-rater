@@ -35,7 +35,6 @@ type CompetencyDescription = {
 type Rating = {
   id: number;
   competency_id: number;
-  user_id: number;
   rating: number;
   notes: string;
   matrix_report_id: string;

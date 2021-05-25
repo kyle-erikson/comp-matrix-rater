@@ -80,7 +80,6 @@ type NewReport {
 type Rating {
   id: Int
   competency_id: Int
-  user_id: Int
   rating: Int
   notes: String
   matrix_report_id: String

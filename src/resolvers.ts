@@ -98,34 +98,27 @@ const resolvers: IResolvers = {
   },
   Mutation: {
     saveReport: async (parent, { input }) => {
-      const {
-        rating_id,
-        matrix_report_id,
-        competency_id,
-        user_id,
-        rating,
-        notes,
-      } = input;
+      const { rating_id, matrix_report_id, competency_id, rating, notes } =
+        input;
 
       const prisma = new PrismaClient();
 
       let ratingId = rating_id ? Number(rating_id) : 0;
-      let userId = user_id ? { user_id: Number(user_id) } : null;
 
       let ratingRecord = {};
 
-      if (!userId) {
-        userId = await prisma.matrix_report.findUnique({
-          where: {
-            id: matrix_report_id,
-          },
-          select: {
-            user_id: true,
-          },
-        });
-      }
+      // if (!userId) {
+      //   userId = await prisma.matrix_report.findUnique({
+      //     where: {
+      //       id: matrix_report_id,
+      //     },
+      //     select: {
+      //       user_id: true,
+      //     },
+      //   });
+      // }
 
-      if (!userId) throw new Error("Could not find user for this atrix report");
+      // if (!userId) throw new Error("Could not find user for this atrix report");
 
       if (ratingId > 0) {
         ratingRecord = await prisma.rating.update({
@@ -141,7 +134,6 @@ const resolvers: IResolvers = {
         ratingRecord = await prisma.rating.create({
           data: {
             competency_id: Number(competency_id),
-            user_id: userId.user_id,
             rating: Number(rating),
             notes: notes,
             matrix_report_id: matrix_report_id,

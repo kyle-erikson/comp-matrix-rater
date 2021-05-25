@@ -63,13 +63,11 @@ model matrix {
 model rating {
   id               Int            @id @default(autoincrement())
   competency_id    Int
-  user_id          Int
   rating           Int
   notes            String?
   matrix_report_id String?        @db.Uuid
   competency       competency     @relation(fields: [competency_id], references: [id])
   matrix_report    matrix_report? @relation(fields: [matrix_report_id], references: [id])
-  user             user           @relation(fields: [user_id], references: [id])
 }
 
 model user {
@@ -81,7 +79,6 @@ model user {
   last_name     String?
   level         level           @relation(fields: [level_id], references: [id])
   matrix_report matrix_report[]
-  rating        rating[]
 }
 
 model matrix_report {
